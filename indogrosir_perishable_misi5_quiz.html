@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0D72B9" />
+  <title>Indogrosir Perishable • Misi 5 Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            comic: ['"Trebuchet MS"', 'Arial', 'sans-serif']
+          },
+          boxShadow: {
+            comic: '6px 6px 0 #111827',
+            comicSm: '4px 4px 0 #111827'
+          },
+          keyframes: {
+            pop: { '0%': { transform: 'scale(.85)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+            wobble: { '0%,100%': { transform: 'rotate(-2deg)' }, '50%': { transform: 'rotate(2deg)' } },
+            bouncey: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-7px)' } },
+            shake: { '0%,100%': { transform: 'translateX(0)' }, '25%': { transform: 'translateX(-5px)' }, '75%': { transform: 'translateX(5px)' } },
+            confetti: { '0%': { transform: 'translateY(-10vh) rotate(0deg)', opacity: '1' }, '100%': { transform: 'translateY(110vh) rotate(720deg)', opacity: '0' } }
+          },
+          animation: {
+            pop: 'pop .25s ease-out',
+            wobble: 'wobble 1.4s ease-in-out infinite',
+            bouncey: 'bouncey .9s ease-in-out infinite',
+            shake: 'shake .35s ease-in-out',
+            confetti: 'confetti 3.5s linear forwards'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body { min-height:100%; }
+    body { margin:0; font-family:"Trebuchet MS",Arial,sans-serif; background:#f8fbff; color:#111827; }
+    .comic-border { border:4px solid #111827; }
+    .comic-btn { border:4px solid #111827; box-shadow:6px 6px 0 #111827; transition:.15s; }
+    .comic-btn:active { transform:translate(4px,4px); box-shadow:2px 2px 0 #111827; }
+    .comic-card { border:4px solid #111827; box-shadow:7px 7px 0 #111827; }
+    .option-btn { border:4px solid #111827; box-shadow:4px 4px 0 #111827; transition:.15s; }
+    .option-btn:not(:disabled):active { transform:translate(3px,3px); box-shadow:1px 1px 0 #111827; }
+    .option-btn.selected { outline:5px solid #fbbf24; transform:translate(2px,2px); }
+    .option-btn.correct { background:#86efac !important; }
+    .option-btn.wrong { background:#fca5a5 !important; }
+    .option-btn:disabled { cursor:not-allowed; opacity:.95; }
+    .progress-track { border:3px solid #111827; background:#fff; }
+    .progress-fill { transition:width .35s ease; }
+    .hidden-screen { display:none !important; }
+    .screen { min-height:100dvh; }
+    .speech { position:relative; }
+    .speech:after { content:""; position:absolute; left:28px; bottom:-14px; width:22px; height:22px; background:#fff; border-right:4px solid #111827; border-bottom:4px solid #111827; transform:rotate(45deg); }
+    .confetti-piece { position:fixed; top:-20px; width:12px; height:20px; pointer-events:none; z-index:100; animation:confetti 3.4s linear forwards; }
+    .mini-badge { border:3px solid #111827; box-shadow:3px 3px 0 #111827; }
+    .drag-item { user-select:none; touch-action:none; }
+    .dropzone { min-height:96px; }
+    .safe-bottom { padding-bottom:calc(1rem + env(safe-area-inset-bottom)); }
+    .connect-board { position:relative; }
+    .connect-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:1; }
+    .connect-grid { position:relative; z-index:2; }
+    .connect-node { min-height:72px; border:4px solid #111827; box-shadow:4px 4px 0 #111827; transition:.15s ease; touch-action:manipulation; }
+    .connect-node.left.selected, .connect-node.right.selected { background:#fde68a; transform:translateY(-2px); box-shadow:5px 5px 0 #111827; }
+    .connect-node.matched { background:#bbf7d0; border-color:#166534; box-shadow:4px 4px 0 #166534; }
+    .connect-node.wrong-flash { background:#fecaca; border-color:#b91c1c; animation:shake .35s ease-in-out; }
+    .connect-instruction { border:3px dashed #111827; }
+    @media (max-width:430px){ .connect-node{min-height:66px;font-size:.82rem;padding:.7rem .55rem;} }
+    @media (min-width:768px){ .screen-inner{max-width:760px;} }
+  </style>
+</head>
+<body>
+  <main id="app" class="screen bg-white">
+    <!-- START SCREEN -->
+    <section id="startScreen" class="screen flex items-center justify-center p-4 bg-gradient-to-b from-white via-sky-50 to-red-50">
+      <div class="screen-inner w-full max-w-xl">
+        <div class="relative mb-5 flex items-center justify-between">
+          <div class="mini-badge bg-[#0D72B9] text-white font-black rounded-xl px-3 py-2 text-sm">INDOGROSIR</div>
+          <div class="mini-badge bg-[#D71920] text-white font-black rounded-xl px-3 py-2 text-sm">PERISHABLE</div>
+        </div>
+        <div class="comic-card rounded-[2rem] p-6 sm:p-8 bg-white overflow-hidden">
+          <div class="text-center">
+            <div class="text-6xl sm:text-7xl animate-bouncey mb-2">🥦🍗🍉</div>
+            <div class="inline-block bg-yellow-300 comic-border rounded-full px-4 py-2 font-black text-sm rotate-[-2deg] mb-4">MISI 5 • ORGANISASI</div>
+            <h1 class="text-4xl sm:text-5xl font-black leading-tight">PERISHABLE<br><span class="text-[#0D72B9]">QUIZ ATTACK!</span></h1>
+            <p class="mt-3 text-lg font-bold">Siap taklukkan 15 misi? 🎯<br>Uji pemahaman kita tentang kerja tim Perishable.</p>
+          </div>
+
+          <div class="speech comic-border rounded-3xl mt-6 p-4 bg-sky-50 font-bold">
+            💬 <span class="text-[#D71920]">Ayo fokus!</span> Setiap soal cuma punya <b>30 detik</b>. Kita punya <b>5 ❤️</b>.
+          </div>
+
+          <label for="nameInput" class="block mt-6 text-sm font-black uppercase tracking-wide">Nama Lengkap</label>
+          <input id="nameInput" type="text" maxlength="50" autocomplete="name" placeholder="Tulis nama lengkap..."
+                 class="w-full mt-2 comic-border rounded-2xl px-4 py-4 text-lg font-bold outline-none focus:ring-4 focus:ring-yellow-300" />
+          <p id="nameHint" class="text-sm font-bold text-red-600 mt-2 hidden">Nama lengkap wajib diisi.</p>
+
+          <button id="startBtn" disabled class="w-full mt-5 comic-btn rounded-2xl py-4 text-xl font-black bg-gray-300 text-gray-500 cursor-not-allowed">
+            🚀 MULAI MISI
+          </button>
+        </div>
+        <p class="text-center text-xs font-bold text-gray-500 mt-4">Mobile-first • 15 soal • Ambang lulus 70%</p>
+      </div>
+    </section>
+
+    <!-- QUIZ SCREEN -->
+    <section id="quizScreen" class="screen hidden-screen bg-gradient-to-b from-sky-50 via-white to-red-50 p-3 sm:p-5">
+      <div class="screen-inner mx-auto w-full max-w-2xl">
+        <header class="sticky top-0 z-30 -mx-3 px-3 pt-2 pb-3 sm:static sm:mx-0 sm:px-0 bg-gradient-to-b from-sky-50/95 to-transparent backdrop-blur">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="mini-badge bg-white rounded-xl px-2 py-1 text-xs font-black">👤 <span id="playerNameTop">Peserta</span></div>
+            <div class="mini-badge bg-red-100 text-red-700 rounded-xl px-2 py-1 text-xs font-black">❤️ <span id="livesTop">5</span></div>
+            <div class="ml-auto flex gap-2">
+              <button id="muteBtn" class="mini-badge bg-yellow-300 rounded-xl px-3 py-2 font-black text-sm">🔊</button>
+              <button id="giveUpBtn" class="mini-badge bg-white rounded-xl px-3 py-2 font-black text-sm text-red-700">MENYERAH</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="progress-track rounded-full h-5 flex-1 overflow-hidden">
+              <div id="progressFill" class="progress-fill h-full bg-[#0D72B9]" style="width:0%"></div>
+            </div>
+            <div id="questionCounter" class="font-black text-sm whitespace-nowrap">1 / 15</div>
+          </div>
+        </header>
+
+        <div class="mt-4">
+          <div id="questionCard" class="comic-card bg-white rounded-[2rem] p-4 sm:p-6 animate-pop">
+            <div class="flex items-center justify-between gap-2 mb-4">
+              <div id="levelBadge" class="mini-badge rounded-full px-3 py-1 bg-blue-100 text-blue-800 font-black text-xs">C1 • REMEMBERING</div>
+              <div id="timerBadge" class="mini-badge rounded-full px-3 py-1 bg-yellow-300 font-black text-sm">⏱️ 30s</div>
+            </div>
+
+            <div id="questionTypeBadge" class="inline-block bg-red-100 text-red-700 comic-border rounded-xl px-3 py-1 text-xs font-black mb-3">PILIHAN GANDA</div>
+            <h2 id="questionText" class="text-2xl sm:text-3xl font-black leading-tight"></h2>
+            <div id="questionVisual" class="mt-4"></div>
+            <div id="answerArea" class="mt-5"></div>
+            <div id="feedbackBox" class="hidden mt-5 comic-border rounded-2xl p-4 animate-pop"></div>
+            <button id="nextBtn" disabled class="w-full mt-5 comic-btn rounded-2xl py-4 font-black text-lg bg-gray-300 text-gray-500 cursor-not-allowed">SOAL SELANJUTNYA ➜</button>
+          </div>
+        </div>
+        <div class="safe-bottom"></div>
+      </div>
+    </section>
+
+    <!-- RESULT SCREEN -->
+    <section id="resultScreen" class="screen hidden-screen flex items-center justify-center p-4 bg-gradient-to-b from-white via-yellow-50 to-sky-50">
+      <div class="screen-inner w-full max-w-xl">
+        <div id="resultCard" class="comic-card rounded-[2rem] bg-white p-6 sm:p-8 text-center animate-pop">
+          <div id="resultEmoji" class="text-7xl mb-3">🏆</div>
+          <div id="resultRibbon" class="inline-block comic-border rounded-full px-4 py-2 font-black mb-3 bg-green-300">MISI SELESAI!</div>
+          <h2 id="resultTitle" class="text-3xl sm:text-4xl font-black">Mantap!</h2>
+          <p id="resultMessage" class="mt-2 font-bold text-gray-700"></p>
+
+          <div class="grid grid-cols-2 gap-3 mt-6">
+            <div class="comic-border rounded-2xl p-4 bg-sky-50"><div class="text-xs font-black">SKOR</div><div id="scoreOut" class="text-3xl font-black text-[#0D72B9]">0</div></div>
+            <div class="comic-border rounded-2xl p-4 bg-red-50"><div class="text-xs font-black">PERSENTASE</div><div id="percentOut" class="text-3xl font-black text-[#D71920]">0%</div></div>
+          </div>
+          <div class="mt-4 comic-border rounded-2xl p-4 bg-white text-left">
+            <div class="text-sm font-black">DETAIL</div>
+            <div id="detailOut" class="mt-2 text-sm font-bold space-y-1"></div>
+          </div>
+
+          <button id="retryBtn" class="w-full mt-6 comic-btn rounded-2xl py-4 text-xl font-black bg-[#0D72B9] text-white">🔁 ULANGI KUIS</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50">
+    <div class="w-full max-w-sm comic-card rounded-3xl bg-white p-6 text-center animate-pop">
+      <div class="text-5xl mb-3">🤔</div>
+      <h3 class="text-2xl font-black">Yakin mau menyerah?</h3>
+      <p class="mt-2 font-bold text-gray-600">"Apakah anda yakin untuk mengulang kuis?"</p>
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button id="cancelGiveUp" class="option-btn rounded-xl py-3 font-black bg-white">BATAL</button>
+        <button id="confirmGiveUp" class="option-btn rounded-xl py-3 font-black bg-[#D71920] text-white">YA, ULANG</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      { id:1, level:'C1', levelLabel:'REMEMBERING', type:'mcq', typeLabel:'PILIHAN GANDA', q:'Apa tujuan pertama yang disebutkan dalam pelatihan Misi 5?', options:['Menjadi konsumen loyal','Mengetahui struktur organisasi di bagian Perishable','Menguasai semua promo toko','Mengatur jadwal kasir'], answer:1, explain:'Tujuan pertama pelatihan adalah peserta mengetahui struktur organisasi di bagian Perishable.' },
+      { id:2, level:'C1', levelLabel:'REMEMBERING', type:'mcq', typeLabel:'PILIHAN GANDA', q:'Shift pagi pada modul dimulai dan berakhir pada jam berapa?', options:['07:30–16:00','08:00–17:00','09:00–18:00','15:00–21:30'], answer:0, explain:'Shift pagi tercantum PK 07:30 s/d PK 16:00.' },
+      { id:3, level:'C1', levelLabel:'REMEMBERING', type:'connect', typeLabel:'CONNECTING DOT', q:'Hubungkan nama alat di kiri dengan fungsi yang tepat di kanan.', pairs:[['Timbangan','Menimbang berat produk'],['Pisau','Memotong produk'],['Talenan','Menjadi alas saat memotong produk'],['Plastic Wrapping','Membungkus atau menutup produk'],['Tray Mika','Menjadi wadah atau tempat penyajian produk']], explain:'Sarana kerja yang dicantumkan modul adalah timbangan, pisau, talenan, plastic wrapping, dan tray mika. Pada misi ini, pasangkan masing-masing alat dengan fungsi yang tepat.' },
+      { id:4, level:'C1', levelLabel:'REMEMBERING', type:'truefalse', typeLabel:'BENAR / SALAH', q:'Shift siang pada modul berlangsung pukul 15:00 sampai 21:30.', answer:true, explain:'Benar. Modul mencantumkan SHIFT SIANG PK 15:00 s/d PK 21.30.' },
+      { id:5, level:'C2', levelLabel:'UNDERSTANDING', type:'mcq', typeLabel:'PILIHAN GANDA', q:'Mengapa display harus selalu penuh dan baik?', options:['Supaya gudang cepat kosong','Karena keindahan display menarik perhatian konsumen','Supaya semua produk terlihat murah','Karena hanya untuk kebutuhan audit'], answer:1, explain:'Modul menegaskan senjata utama menarik perhatian konsumen adalah kecantikan dan keindahan display.' },
+      { id:6, level:'C2', levelLabel:'UNDERSTANDING', type:'mcq', typeLabel:'PILIHAN GANDA', q:'Apa yang perlu dicek setiap hari terkait POP & Price Tag?', options:['Hanya warna label','Mekanisme promo, periode promo, dan kesesuaiannya dengan promo berjalan','Jumlah kasir','Jadwal shift malam'], answer:1, explain:'Setiap hari cek POP & price tag, mekanisme promo, periode promosi, dan pastikan sesuai dengan promo berjalan.' },
+      { id:7, level:'C2', levelLabel:'UNDERSTANDING', type:'truefalse', typeLabel:'BENAR / SALAH', q:'CRM dalam modul dipahami sebagai strategi perdagangan melalui proses komunikasi yang bermakna untuk memahami dan memengaruhi perilaku konsumen.', answer:true, explain:'Benar. Definisi CRM di modul menekankan pemahaman dan pengaruh perilaku konsumen melalui proses komunikasi yang bermakna.' },
+      { id:8, level:'C2', levelLabel:'UNDERSTANDING', type:'sort', typeLabel:'DRAG & DROP', q:'Kelompokkan aktivitas berikut sesuai fokus kerja SHIFT PAGI atau SHIFT MALAM.', items:[['Display barang','pagi'],['Kelengkapan alat kerja','pagi'],['Kebersihan area kerja','pagi'],['CRM ke konsumen','pagi'],['Sortir barang rusak','malam'],['Pengolahan barang rusak','malam']], zones:[['🌞 SHIFT PAGI','pagi'],['🌙 SHIFT MALAM','malam']], explain:'Fokus pagi: display, kelengkapan alat kerja, kebersihan area kerja, dan CRM. Fokus malam: sortir barang rusak dan pengolahan barang rusak.' },
+      { id:9, level:'C2', levelLabel:'UNDERSTANDING', type:'symbol', typeLabel:'PILIH SIMBOL', q:'Saat mengarahkan konsumen, gesture mana yang sesuai SOP?', symbols:[['🖐️','Telapak tangan terbuka'],['👍','Jempol'],['☝️','Telunjuk']], answer:[0,1], multi:true, explain:'Modul menyarankan menunjuk dengan telapak tangan terbuka atau jempol. Menunjuk dengan telunjuk tidak disarankan.' },
+      { id:10, level:'C3', levelLabel:'APPLYING', type:'mcq', typeLabel:'STUDI KASUS', q:'Produk yang diminta konsumen sedang kosong. Tindakan yang sesuai modul adalah…', options:['Membiarkan konsumen mencari sendiri','Mengatakan produk habis lalu selesai','Menawarkan produk substitusi yang tersedia','Menunggu hingga konsumen bertanya lagi'], answer:2, explain:'Modul memberi contoh: jika barang yang diminta kosong, tawarkan produk substitusi.' },
+      { id:11, level:'C3', levelLabel:'APPLYING', type:'mcq', typeLabel:'STUDI KASUS', q:'Saat menemukan produk display yang jelek atau cacat, apa yang harus dilakukan?', options:['Tetap dipajang agar display penuh','Ditumpuk di belakang display','Turun pajang','Diberi harga lebih murah tanpa instruksi'], answer:2, explain:'Modul menegaskan produk dengan kondisi jelek/cacat harus turun pajang dan jangan pernah memajangnya.' },
+      { id:12, level:'C3', levelLabel:'APPLYING', type:'truefalse', typeLabel:'BENAR / SALAH', q:'Produk turun pajang yang layak konsumsi dapat diolah menjadi produk lainnya.', answer:true, explain:'Benar. Modul menyatakan produk turun pajang yang layak konsumsi dapat diolah menjadi produk lainnya.' },
+      { id:13, level:'C3', levelLabel:'APPLYING', type:'mcq', typeLabel:'STUDI KASUS', q:'Jika produk perishable ternyata tidak layak konsumsi, tindakan wajibnya adalah…', options:['Dikembalikan ke display','Dibiarkan sampai shift berikutnya','Ditawarkan sebagai substitusi','Dimusnahkan'], answer:3, explain:'Modul menyatakan jika tidak layak konsumsi maka WAJIB DIMUSNAHKAN.' },
+      { id:14, level:'C3', levelLabel:'APPLYING', type:'mcq', typeLabel:'STUDI KASUS', q:'Tim Perishable tidak mengecek POP, lalu terjadi selisih harga. Apa konsekuensinya menurut modul?', options:['Kasir yang selalu menanggung','Tim Perish wajib mengganti selisihnya','Tidak ada tindakan','Promo langsung dibatalkan'], answer:1, explain:'Modul menyatakan jika ada selisih harga karena tidak dicek POP, Tim Perish wajib mengganti selisihnya.' },
+      { id:15, level:'C3', levelLabel:'APPLYING', type:'truefalse', typeLabel:'BENAR / SALAH', q:'Prinsip kebersihan yang harus dipegang Tim Perishable adalah: “Datang bersih, saat bekerja bersih, dan pulang harus bersih.”', answer:true, explain:'Benar. Prinsip tersebut tercantum pada halaman penutup modul.' }
+    ];
+
+    let state = { name:'', index:0, lives:5, score:0, answered:false, timer:30, timerId:null, muted:false, audioCtx:null, bgmTimer:null, bgmStep:0 };
+    const $ = s => document.querySelector(s);
+
+    function show(id){ ['startScreen','quizScreen','resultScreen'].forEach(x=>$('#'+x).classList.toggle('hidden-screen', x!==id)); }
+    function setStartState(){
+      const valid = $('#nameInput').value.trim().length >= 2;
+      $('#startBtn').disabled = !valid;
+      $('#startBtn').classList.toggle('bg-gray-300', !valid);
+      $('#startBtn').classList.toggle('text-gray-500', !valid);
+      $('#startBtn').classList.toggle('cursor-not-allowed', !valid);
+      $('#startBtn').classList.toggle('bg-[#0D72B9]', valid);
+      $('#startBtn').classList.toggle('text-white', valid);
+      $('#nameHint').classList.add('hidden');
+    }
+
+    function initAudio(){
+      if(state.audioCtx) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return;
+      state.audioCtx = new Ctx();
+      if(state.audioCtx.state === 'suspended') state.audioCtx.resume();
+      startBgm();
+    }
+    function tone(freq, duration=.09, type='square', volume=.045, when=null){
+      if(state.muted || !state.audioCtx) return;
+      const ctx = state.audioCtx;
+      const t = when ?? ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq,t);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(volume,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+duration);
+      o.connect(g).connect(ctx.destination); o.start(t); o.stop(t+duration+.02);
+    }
+    function clickSfx(){ tone(520,.05,'square',.035); }
+    function correctSfx(){ tone(740,.08,'square',.05); tone(988,.15,'square',.05, state.audioCtx?.currentTime + .07); }
+    function wrongSfx(){ tone(170,.13,'sawtooth',.05); tone(120,.18,'sawtooth',.045, state.audioCtx?.currentTime + .08); }
+    function gameOverSfx(){ [330,262,196,130].forEach((f,i)=>tone(f,.18,'square',.045, state.audioCtx?.currentTime + i*.13)); }
+    function startBgm(){
+      if(!state.audioCtx || state.bgmTimer) return;
+      const notes=[262,330,392,523,392,330,294,392];
+      state.bgmTimer=setInterval(()=>{
+        if(state.muted) return;
+        const n=notes[state.bgmStep%notes.length];
+        tone(n,.11,'square',.012);
+        state.bgmStep++;
+      }, 280);
+    }
+    function stopAudio(){ if(state.bgmTimer){clearInterval(state.bgmTimer);state.bgmTimer=null;} }
+
+    function startQuiz(){
+      initAudio(); clickSfx();
+      state.name=$('#nameInput').value.trim(); state.index=0; state.lives=5; state.score=0;
+      show('quizScreen'); renderQuestion();
+    }
+
+    function renderQuestion(){
+      clearInterval(state.timerId); state.answered=false; state.timer=30;
+      const q=questions[state.index];
+      $('#playerNameTop').textContent=state.name;
+      $('#livesTop').textContent=state.lives;
+      $('#questionCounter').textContent=`${state.index+1} / ${questions.length}`;
+      $('#progressFill').style.width=`${((state.index)/questions.length)*100}%`;
+      $('#levelBadge').textContent=`${q.level} • ${q.levelLabel}`;
+      $('#questionTypeBadge').textContent=q.typeLabel;
+      $('#questionText').textContent=q.q;
+      $('#questionVisual').innerHTML='';
+      $('#answerArea').innerHTML='';
+      $('#feedbackBox').className='hidden mt-5 comic-border rounded-2xl p-4 animate-pop';
+      $('#nextBtn').disabled=true; enableNext(false);
+      updateTimerUI();
+
+      if(q.type==='mcq') renderMCQ(q);
+      if(q.type==='truefalse') renderTrueFalse(q);
+      if(q.type==='symbol') renderSymbol(q);
+      if(q.type==='connect') renderConnect(q);
+      if(q.type==='sort') renderSort(q);
+      $('#questionCard').classList.remove('animate-pop'); void $('#questionCard').offsetWidth; $('#questionCard').classList.add('animate-pop');
+      startTimer();
+    }
+
+    function renderMCQ(q){
+      q.options.forEach((opt,i)=>{
+        const b=document.createElement('button');
+        b.className='option-btn w-full text-left rounded-2xl p-4 mb-3 bg-white font-black text-base sm:text-lg';
+        b.innerHTML=`<span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0D72B9] text-white mr-3">${String.fromCharCode(65+i)}</span>${opt}`;
+        b.onclick=()=>submitAnswer(i===q.answer,i===q.answer?`Pilihan ${String.fromCharCode(65+i)}`:`Pilihan ${String.fromCharCode(65+i)}`);
+        $('#answerArea').appendChild(b);
+      });
+    }
+    function renderTrueFalse(q){
+      ['BENAR','SALAH'].forEach((label,i)=>{
+        const val=i===0;
+        const b=document.createElement('button');
+        b.className='option-btn w-full rounded-2xl p-4 mb-3 bg-white font-black text-lg';
+        b.innerHTML=`${val?'✅':'❌'} ${label}`;
+        b.onclick=()=>submitAnswer(val===q.answer,label);
+        $('#answerArea').appendChild(b);
+      });
+    }
+    function renderSymbol(q){
+      const wrap=document.createElement('div'); wrap.className='grid grid-cols-2 sm:grid-cols-3 gap-3';
+      q.symbols.forEach((s,i)=>{
+        const b=document.createElement('button');
+        b.className='option-btn rounded-2xl p-3 bg-white font-black';
+        b.innerHTML=`<div class="text-4xl">${s[0]}</div><div class="text-xs mt-1">${s[1]}</div>`;
+        b.onclick=()=>{
+          if(state.answered) return;
+          if(q.multi){ b.classList.toggle('selected'); b.dataset.active=b.classList.contains('selected')?'1':'0'; }
+          else submitSymbol([i]);
+          if(q.multi){
+            const selected=[...wrap.querySelectorAll('button')].map((x,j)=>x.classList.contains('selected')?j:null).filter(x=>x!==null);
+            if(selected.length===q.answer.length) submitSymbol(selected);
+          }
+        };
+        wrap.appendChild(b);
+      });
+      if(q.multi){ const hint=document.createElement('div'); hint.className='col-span-full text-sm font-bold text-gray-600'; hint.textContent='Pilih semua simbol yang benar. Jawaban otomatis terkirim setelah jumlah pilihan terpenuhi.'; wrap.prepend(hint); }
+      $('#answerArea').appendChild(wrap);
+    }
+    function renderConnect(q){
+      const board=document.createElement('div');
+      board.className='connect-board';
+      board.innerHTML=`
+        <div class="connect-instruction rounded-2xl bg-yellow-50 p-3 mb-4 text-sm font-black">
+          👆 Tap <span class="text-[#0D72B9]">alat</span> di kiri, lalu tap <span class="text-[#D71920]">fungsi</span> yang cocok di kanan. Setiap pasangan yang benar akan terhubung dengan garis.
+        </div>
+        <div class="relative">
+          <svg class="connect-lines" aria-hidden="true"></svg>
+          <div class="connect-grid grid grid-cols-2 gap-3">
+            <div><div class="text-center font-black text-[#0D72B9] mb-2">NAMA ALAT</div><div id="connectLeft" class="space-y-3"></div></div>
+            <div><div class="text-center font-black text-[#D71920] mb-2">FUNGSI</div><div id="connectRight" class="space-y-3"></div></div>
+          </div>
+        </div>`;
+      $('#answerArea').appendChild(board);
+      const left=board.querySelector('#connectLeft'), right=board.querySelector('#connectRight'), svg=board.querySelector('.connect-lines');
+      const shuffled=[...q.pairs].sort(()=>Math.random()-0.5);
+      let selectedLeft=null, selectedRight=null;
+      const matched=new Set();
+
+      q.pairs.forEach((pair,i)=>{
+        const b=document.createElement('button');
+        b.type='button'; b.className='connect-node left w-full rounded-2xl bg-white p-3 font-black text-center'; b.dataset.id=String(i);
+        b.innerHTML=`<span class="block text-2xl mb-1">🔵</span><span>${pair[0]}</span>`;
+        b.addEventListener('click',()=>selectLeft(i,b)); left.appendChild(b);
+      });
+      shuffled.forEach(pair=>{
+        const originalIndex=q.pairs.indexOf(pair);
+        const b=document.createElement('button');
+        b.type='button'; b.className='connect-node right w-full rounded-2xl bg-white p-3 font-black text-center'; b.dataset.id=String(originalIndex);
+        b.innerHTML=`<span class="block text-2xl mb-1">🟠</span><span>${pair[1]}</span>`;
+        b.addEventListener('click',()=>selectRight(originalIndex,b)); right.appendChild(b);
+      });
+
+      function selectLeft(id,el){
+        if(state.answered || matched.has(id)) return;
+        board.querySelectorAll('.connect-node.left.selected').forEach(x=>x.classList.remove('selected'));
+        selectedLeft={id,el}; el.classList.add('selected'); tryConnect();
+      }
+      function selectRight(id,el){
+        if(state.answered || matched.has(id)) return;
+        board.querySelectorAll('.connect-node.right.selected').forEach(x=>x.classList.remove('selected'));
+        selectedRight={id,el}; el.classList.add('selected'); tryConnect();
+      }
+      function tryConnect(){
+        if(!selectedLeft || !selectedRight) return;
+        const l=selectedLeft, r=selectedRight; selectedLeft=null; selectedRight=null;
+        l.el.classList.remove('selected'); r.el.classList.remove('selected');
+        if(l.id===r.id){
+          matched.add(l.id); l.el.classList.add('matched'); r.el.classList.add('matched'); drawLine(l.el,r.el,true); clickSfx();
+          if(matched.size===q.pairs.length) setTimeout(()=>submitSpecial(true),220);
+        }else{
+          l.el.classList.add('wrong-flash'); r.el.classList.add('wrong-flash'); drawTempLine(l.el,r.el);
+          state.lives--; $('#livesTop').textContent=state.lives; wrongSfx();
+          setTimeout(()=>{l.el.classList.remove('wrong-flash');r.el.classList.remove('wrong-flash');},380);
+          if(state.lives<=0){ state.answered=true; clearInterval(state.timerId); gameOverSfx(); setTimeout(()=>showResult(true),500); }
+        }
+      }
+      function pointFor(el,isRight){
+        const r=el.getBoundingClientRect(), br=board.querySelector('.relative').getBoundingClientRect();
+        return {x:(isRight?r.left:r.right)-br.left,y:r.top+r.height/2-br.top};
+      }
+      function drawLine(a,b,good){
+        const container=board.querySelector('.relative'), rr=container.getBoundingClientRect();
+        svg.setAttribute('viewBox',`0 0 ${rr.width} ${rr.height}`);
+        const p1=pointFor(a,false), p2=pointFor(b,true), curve=Math.max(24,(p2.x-p1.x)*.32);
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d',`M ${p1.x} ${p1.y} C ${p1.x+curve} ${p1.y}, ${p2.x-curve} ${p2.y}, ${p2.x} ${p2.y}`);
+        path.setAttribute('fill','none'); path.setAttribute('stroke',good?'#16a34a':'#dc2626'); path.setAttribute('stroke-width',good?'6':'5'); path.setAttribute('stroke-linecap','round'); path.setAttribute('stroke-dasharray',good?'0':'9 8');
+        svg.appendChild(path); return path;
+      }
+      function drawTempLine(a,b){ const path=drawLine(a,b,false); setTimeout(()=>path.remove(),450); }
+      window.addEventListener('resize',()=>{const rr=board.querySelector('.relative').getBoundingClientRect(); svg.setAttribute('viewBox',`0 0 ${rr.width} ${rr.height}`);});
+    }
+
+    function renderSort(q){
+      const dragArea=document.createElement('div');
+      dragArea.innerHTML=`<div class="text-sm font-black mb-2">Tarik item ke kategori yang tepat:</div><div id="dragPool" class="flex flex-wrap gap-2 mb-4"></div><div id="zones" class="grid gap-3"></div>`;
+      $('#answerArea').appendChild(dragArea);
+      const pool=dragArea.querySelector('#dragPool'); const zones=dragArea.querySelector('#zones');
+      q.items.forEach((it,idx)=>{
+        const chip=document.createElement('button'); chip.draggable=true; chip.dataset.idx=idx; chip.dataset.cat=it[1];
+        chip.className='drag-item comic-border rounded-xl px-3 py-2 bg-yellow-200 font-black text-sm'; chip.textContent=it[0];
+        chip.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',idx));
+        chip.addEventListener('click',()=>{ const target=chip.dataset.cat==='pagi'?zones.children[0]:zones.children[1]; target.appendChild(chip); checkSortDone(); });
+        pool.appendChild(chip);
+      });
+      q.zones.forEach(z=>{
+        const zone=document.createElement('div'); zone.className='dropzone comic-border rounded-2xl bg-sky-50 p-3';
+        zone.dataset.cat=z[1]; zone.innerHTML=`<div class="font-black mb-2">${z[0]}</div><div class="space-y-2"></div>`;
+        zone.addEventListener('dragover',e=>e.preventDefault());
+        zone.addEventListener('drop',e=>{ e.preventDefault(); const idx=e.dataTransfer.getData('text/plain'); const chip=pool.parentNode.querySelector(`[data-idx="${idx}"]`) || dragArea.querySelector(`[data-idx="${idx}"]`); if(chip) zone.querySelector('div.space-y-2').appendChild(chip); checkSortDone(); });
+        zones.appendChild(zone);
+      });
+      function checkSortDone(){
+        const all=[...dragArea.querySelectorAll('.dropzone .drag-item')];
+        if(all.length!==q.items.length || state.answered) return;
+        const ok=all.every(chip=>chip.dataset.cat===dragArea.querySelector(`[data-idx="${chip.dataset.idx}"]`)?.dataset.cat);
+        const placed=[...dragArea.querySelectorAll('.dropzone .drag-item')];
+        const good=placed.every(chip=>chip.closest('.dropzone').dataset.cat===chip.dataset.cat);
+        if(good) submitSpecial(true); else submitSpecial(false);
+      }
+    }
+
+    function submitSymbol(indices){
+      if(state.answered) return;
+      const q=questions[state.index];
+      const correct=indices.length===q.answer.length && indices.every(x=>q.answer.includes(x));
+      submitSpecial(correct);
+    }
+    function submitSpecial(correct){ submitAnswer(correct,''); }
+    function submitAnswer(correct, label=''){
+      if(state.answered) return;
+      state.answered=true; clearInterval(state.timerId);
+      if(correct){ state.score++; correctSfx(); }
+      else { state.lives--; wrongSfx(); }
+      $('#livesTop').textContent=state.lives;
+      lockAnswers(correct);
+      showFeedback(correct);
+      if(state.lives<=0){
+        gameOverSfx();
+        setTimeout(()=>showResult(true), 500);
+      } else { enableNext(true); }
+    }
+    function lockAnswers(correct){
+      document.querySelectorAll('#answerArea button').forEach(b=>{ b.disabled=true; });
+      const q=questions[state.index];
+      if(q.type==='mcq'){
+        const bs=[...document.querySelectorAll('#answerArea .option-btn')];
+        bs.forEach((b,i)=>{
+          if(i===q.answer) b.classList.add('correct');
+        });
+        if(!correct){ const chosen=bs.find(b=>b.classList.contains('selected')); if(chosen) chosen.classList.add('wrong'); }
+      }
+    }
+    function showFeedback(correct){
+      const q=questions[state.index];
+      $('#feedbackBox').className=`mt-5 comic-border rounded-2xl p-4 animate-pop ${correct?'bg-green-100':'bg-red-100'}`;
+      $('#feedbackBox').innerHTML=`<div class="text-xl font-black">${correct?'✅ JAWABAN BENAR!':'❌ JAWABAN KURANG TEPAT'}</div><div class="mt-2 font-bold">${q.explain}</div>${correct?'':'<div class="mt-2 text-sm font-black text-red-700">Nyawa tersisa: '+state.lives+' ❤️</div>'}`;
+      $('#feedbackBox').classList.remove('hidden');
+    }
+    function enableNext(enable){
+      $('#nextBtn').disabled=!enable;
+      $('#nextBtn').classList.toggle('bg-gray-300',!enable); $('#nextBtn').classList.toggle('text-gray-500',!enable); $('#nextBtn').classList.toggle('cursor-not-allowed',!enable);
+      $('#nextBtn').classList.toggle('bg-[#D71920]',enable); $('#nextBtn').classList.toggle('text-white',enable);
+    }
+    function startTimer(){
+      state.timerId=setInterval(()=>{
+        state.timer--; updateTimerUI();
+        if(state.timer<=0){ clearInterval(state.timerId); if(!state.answered){ submitAnswer(false,'TIMEOUT'); $('#feedbackBox').innerHTML += '<div class="mt-2 font-black">⏰ Waktu habis, soal dihitung salah.</div>'; } }
+      },1000);
+    }
+    function updateTimerUI(){
+      const t=$('#timerBadge'); t.textContent=`⏱️ ${state.timer}s`; t.classList.toggle('bg-red-300',state.timer<=8); t.classList.toggle('bg-yellow-300',state.timer>8); if(state.timer<=8) t.classList.add('animate-shake'); else t.classList.remove('animate-shake');
+    }
+
+    function nextQuestion(){
+      clickSfx();
+      if(state.index===questions.length-1){ showResult(false); return; }
+      state.index++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function showResult(gameOver){
+      clearInterval(state.timerId); show('resultScreen');
+      const pct=Math.round((state.score/questions.length)*100); const passed=pct>=70 && !gameOver;
+      $('#resultEmoji').textContent=passed?'🏆':'😵‍💫';
+      $('#resultRibbon').textContent=passed?'LULUS!':'BELUM LULUS';
+      $('#resultRibbon').className=`inline-block comic-border rounded-full px-4 py-2 font-black mb-3 ${passed?'bg-green-300':'bg-red-300'}`;
+      $('#resultTitle').textContent=passed?'MISI BERHASIL!':'MISI BELUM BERHASIL';
+      $('#resultMessage').textContent=passed?'Keren! Pemahaman kita sudah melewati batas kelulusan 70%.':'Tetap semangat! Ulangi misi dan pelajari kembali feedback tiap soal.';
+      $('#scoreOut').textContent=`${state.score} / ${questions.length}`;
+      $('#percentOut').textContent=`${pct}%`;
+      $('#detailOut').innerHTML=`<div>👤 Nama: ${escapeHtml(state.name)}</div><div>❤️ Sisa nyawa: ${state.lives}</div><div>🎯 Batas lulus: 70%</div>`;
+      if(passed) spawnConfetti();
+      else { if(gameOver) gameOverSfx(); }
+    }
+    function spawnConfetti(){
+      const shapes=['■','●','◆','▲'];
+      for(let i=0;i<55;i++){
+        const el=document.createElement('div'); el.className='confetti-piece'; el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
+        el.style.left=Math.random()*100+'vw'; el.style.fontSize=(10+Math.random()*16)+'px'; el.style.animationDelay=(Math.random()*1.8)+'s'; el.style.transform=`rotate(${Math.random()*360}deg)`; el.style.color=['#0D72B9','#D71920','#FACC15','#16A34A','#7C3AED'][Math.floor(Math.random()*5)];
+        document.body.appendChild(el); setTimeout(()=>el.remove(),5500);
+      }
+    }
+    function escapeHtml(str){ return str.replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])); }
+    function resetToStart(){ clearInterval(state.timerId); state={...state,index:0,lives:5,score:0,answered:false,timer:30,name:''}; $('#nameInput').value=''; setStartState(); show('startScreen'); window.scrollTo({top:0}); }
+
+    $('#nameInput').addEventListener('input',setStartState);
+    $('#nameInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#startBtn').disabled) startQuiz(); });
+    $('#startBtn').onclick=startQuiz;
+    $('#nextBtn').onclick=nextQuestion;
+    $('#retryBtn').onclick=resetToStart;
+    $('#giveUpBtn').onclick=()=>$('#confirmModal').classList.remove('hidden'); $('#confirmModal').classList.add('flex');
+    $('#cancelGiveUp').onclick=()=>$('#confirmModal').classList.add('hidden');
+    $('#confirmGiveUp').onclick=()=>{ $('#confirmModal').classList.add('hidden'); clickSfx(); resetToStart(); };
+    $('#muteBtn').onclick=()=>{ initAudio(); state.muted=!state.muted; $('#muteBtn').textContent=state.muted?'🔇':'🔊'; if(!state.muted) correctSfx(); };
+
+    // Close modal when tapping outside card.
+    $('#confirmModal').addEventListener('click',e=>{ if(e.target===$('#confirmModal')) $('#confirmModal').classList.add('hidden'); });
+    setStartState();
+  </script>
+</body>
+</html>
